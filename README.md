@@ -1,171 +1,183 @@
-# Mission Simulator: первая версия
+# Mission Simulator: first version
 
-Браузерная игра: игрок становится командиром космического корабля, выбирает миссию, проверяет ресурсы и оборудование, решает задачи по физике и астрономии, принимает решения в аварийной ситуации и получает оценку за полёт.
+A browser game: the player becomes the commander of a spacecraft, chooses a mission, checks resources and equipment, solves physics and astronomy tasks, makes decisions in an emergency and gets a score for the flight.
 
-В этой версии одна полная миссия: «Спасение исследовательского спутника».
+This version has one complete mission: "Research Satellite Rescue".
 
-## Как открыть
+## How to open
 
-1. Откройте файл `index.html` двойным щелчком. Игра работает в любом современном браузере, интернет не нужен.
-2. Если браузер что-то блокирует, запустите маленький сервер в папке игры и откройте адрес в браузере:
+1. Double-click `index.html`. The game runs in any modern browser, no internet needed.
+2. If the browser blocks something, start a small server in the game folder and open the address in a browser:
    ```
    python3 -m http.server 8000
    ```
-   Адрес: http://localhost:8000
-3. Чтобы играть с телефона, игру нужно выложить в интернет (например, GitHub Pages или Netlify: это бесплатно, нужна просто папка с файлами). Этого пока не делали.
+   Address: http://localhost:8000
+3. To play on a phone, the game has to be put online (for example GitHub Pages or Netlify: free, all it needs is the folder of files). This has not been done yet.
 
-Сборка не нужна: это обычные HTML, CSS и JavaScript без библиотек.
+No build step: this is plain HTML, CSS and JavaScript with no libraries.
 
-## Файлы
+## Files
 
-| Файл | Что внутри |
+| File | What's inside |
 |---|---|
-| `index.html` | Страница игры. Подключает три скрипта по порядку. |
-| `css/style.css` | Оформление. Все цвета в начале файла (`:root`), меняйте их там. |
-| `js/physics.js` | Формулы: орбитальная скорость, период, гомановский переход, формула Циолковского. |
-| `data/missions.js` | **Все миссии, задачи и аварии.** Чтобы добавить контент, меняйте только этот файл. |
-| `js/engine.js` | Движок: показывает шаги, проверяет ответы, считает ресурсы и оценку. |
-| `assets/icon.svg` | Иконка. |
+| `index.html` | The game page. Loads three scripts in order. |
+| `css/style.css` | Styling. All colors are at the top of the file (`:root`), change them there. |
+| `js/physics.js` | Formulas: orbital velocity, period, Hohmann transfer, Tsiolkovsky rocket equation. |
+| `data/missions.js` | **All missions, tasks and emergencies.** To add content, change only this file. |
+| `js/engine.js` | Engine: shows the steps, checks answers, tracks resources and the score. |
+| `assets/icon.svg` | Icon. |
 
-## Как устроена миссия
+## How a mission works
 
-Миссия это список шагов (`steps`). Игра идёт по ним сверху вниз. Типы шагов:
+A mission is a list of steps (`steps`). The game goes through them from top to bottom. Step types:
 
-| Тип | Что это | Пример в миссии 1 |
+| Type | What it is | Example in mission 1 |
 |---|---|---|
-| `briefing` | Вступление | Брифинг |
-| `check` | Предстартовая проверка систем, у неисправной системы есть варианты решения | Утечка в скафандре |
-| `numeric` | Задача с числовым ответом, проверка с допуском | Кислород, время перелёта, топливо |
-| `choice` | Выбор варианта, у каждого варианта свои последствия | Выбор орбиты, потеря связи |
-| `shutdown` | Авария с нехваткой энергии: игрок выключает системы | Повреждена солнечная панель |
-| `event` | Сюжетная сцена: проходит время, тратятся ресурсы | Старт, сближение, возвращение |
+| `briefing` | Introduction | Briefing |
+| `check` | Pre-launch systems check, one random system is broken each run and has solution options | Suit leak, fuel leak, sticking engine valve... |
+| `numeric` | Task with a numeric answer, checked within a tolerance | Oxygen, transfer time, fuel |
+| `choice` | Multiple choice, each option has its own consequences | Choosing the orbit, lost contact |
+| `shutdown` | Power emergency: the player switches systems off | Damaged solar panel |
+| `event` | Story scene: time passes, resources are spent | Liftoff, approach, return |
 
-Полная схема всех полей описана комментарием в начале `data/missions.js`.
+The full schema of all the fields is in the comment at the top of `data/missions.js`.
 
-**Ресурсы.** У корабля три ресурса: топливо (кг), кислород (кг), энергия (кВт·ч). Они меняются через `effects` у шагов и вариантов ответа. Кислород ещё и тратится сам: экипаж дышит каждый час (`hours` у шага). Если ресурс закончился, миссия провалена.
+**Resources.** The ship has three resources: fuel (kg), oxygen (kg), energy (kWh). They change through `effects` on steps and answer options. Oxygen is also used automatically: the crew breathes every hour (`hours` on a step). If a resource runs out, the mission fails.
 
-**Флаги.** Решение может поставить флаг (`flag: 'suitLeak'`), а позже другой вариант проверяет его (`ifFlag`). Так решение на старте влияет на конец миссии: если не заменить клапан скафандра, при выходе в космос будет утечка.
+**Flags.** A decision can set a flag (`flag: 'suitLeak'`), and later a step or option checks it (`ifFlag`). This is how a decision at the start affects the end of the mission: if you don't replace the suit valve, it leaks during the spacewalk.
 
-## Как добавить задачу
+**Pre-launch faults.** Every system in a `check` step that has a `fault` can break. On each run exactly one does: the game goes through all of them before repeating one, and remembers which ones have come up in the browser's `localStorage` (if storage is blocked, it remembers until the page is closed). In mission 1 all six systems can break:
 
-Вставьте объект в `steps` нужной миссии, в то место, где задача должна появиться:
+| System | Fault | If you launch without fixing it | Flag |
+|---|---|---|---|
+| Propulsion system | Main fuel valve opens late | 8% more fuel on the transfer | `engineFault` |
+| Fuel tanks | Feed line leaks 15 kg/h | 150 kg lost while waiting in orbit | `fuelLeak` |
+| Oxygen supply | Tank valve leaks 0.15 kg/h | 1.5 kg lost while waiting in orbit | `o2Leak` |
+| Battery and solar panels | Module overheats | 2 kWh lost in orbit, so the Mission Control link has to go in the emergency | `batteryFault` |
+| Link to Mission Control | Amplifier overheats | Link lost on approach: 30 kg of fuel and 0.3 kWh | `commsFault` |
+| EVA spacesuit | Valve leaks 0.25 kg/h | Oxygen lost on every spacewalk | `suitLeak` |
+
+Launching with a fault costs 15% safety at once and another 10% when the consequence hits. Fixing a fault always costs the same 1-hour delay and 0.5 kWh, so `targets` and the maximum score of 100 hold whichever system breaks. To add a fault, add a `fault` to a system in `data/missions.js` and, if it has later consequences, `ifFlag` to the steps it affects.
+
+## How to add a task
+
+Insert an object into the `steps` of the mission, at the point where the task should appear:
 
 ```js
 {
-  id: 'sat-speed', type: 'numeric', title: 'Задача: скорость спутника',
-  givens: ['GM Земли = 3,986 · 10¹⁴ м³/с²', 'Радиус орбиты r = 7171 км'],
-  question: 'С какой скоростью летит спутник? Ответ в км/с.',
-  unit: 'км/с',
-  answer: P.circularVelocity(P.radius(800)) / 1000,   // можно числом: 7.455
-  tolerance: 0.03,                                    // засчитываем ±3%
+  id: 'sat-speed', type: 'numeric', title: 'Task: satellite speed',
+  givens: ['Earth’s GM = 3.986 · 10¹⁴ m³/s²', 'Orbit radius r = 7,171 km'],
+  question: 'How fast is the satellite flying? Answer in km/s.',
+  unit: 'km/s',
+  answer: P.circularVelocity(P.radius(800)) / 1000,   // can be a plain number: 7.455
+  tolerance: 0.03,                                    // accept ±3%
   points: 10,
   hint: 'v = √(GM / r)',
-  formula: 'Круговая скорость: v = √(GM / r)',
-  solution: 'v = √(3,986 · 10¹⁴ / 7,171 · 10⁶) ≈ <b>7,46 км/с</b>',
-  onWrong: { fuel: -30, text: 'Неточная скорость: пришлось подправлять орбиту.' }
+  formula: 'Circular velocity: v = √(GM / r)',
+  solution: 'v = √(3.986 · 10¹⁴ / 7.171 · 10⁶) ≈ <b>7.46 km/s</b>',
+  onWrong: { fuel: -30, text: 'Inaccurate speed: the orbit had to be corrected.' }
 }
 ```
 
-Правильный ответ лучше считать формулой из `js/physics.js` (переменная `P`), а не вписывать руками: тогда при смене чисел в условии ответ поменяется сам. Допуск можно задать в процентах (`tolerance: 0.03` это ±3%) или в единицах (`toleranceAbs: 0.2`). Если у задачи есть второй верный способ (например, приближённая формула), добавьте его в `alsoAccept: [{ value, tolerance, note }]`.
+It is better to compute the correct answer with a formula from `js/physics.js` (the `P` variable) than to type it in by hand: then the answer updates itself when the numbers in the problem change. The tolerance can be a percentage (`tolerance: 0.03` means ±3%) or in units (`toleranceAbs: 0.2`). If a task has a second valid method (for example an approximate formula), add it to `alsoAccept: [{ value, tolerance, note }]`.
 
-Варианты ответа в `choice`, в неисправностях `check` и системы в `shutdown` показываются в случайном порядке, чтобы правильный ответ не был всегда первым. Чтобы отключить перемешивание, поставьте шагу `shuffle: false`.
+Answer options in `choice`, fault options in `check` and systems in `shutdown` appear in random order, so the right answer isn't always first. To turn shuffling off, set `shuffle: false` on the step.
 
-Для задачи с выбором:
+For a multiple-choice task:
 
 ```js
 {
-  id: 'orbit-2', type: 'choice', title: 'Задача: ...', question: '...', points: 10,
-  explanation: 'Почему правильный ответ правильный',
+  id: 'orbit-2', type: 'choice', title: 'Task: ...', question: '...', points: 10,
+  explanation: 'Why the right answer is right',
   options: [
-    { text: 'Вариант 1', correct: true, feedback: 'Что произошло' },
-    { text: 'Вариант 2', correct: false, feedback: 'Что произошло', hours: 1.5,
-      effects: { fuel: -100, safety: -10, log: 'Запись в журнал полёта' } }
+    { text: 'Option 1', correct: true, feedback: 'What happened' },
+    { text: 'Option 2', correct: false, feedback: 'What happened', hours: 1.5,
+      effects: { fuel: -100, safety: -10, log: 'Flight log entry' } }
   ]
 }
 ```
 
-## Как добавить аварию
+## How to add an emergency
 
-Авария с энергией (тип `shutdown`): задайте список потребителей, время и резерв.
+Power emergency (type `shutdown`): set a list of consumers, a duration and a reserve.
 
 ```js
 {
-  id: 'emergency-2', type: 'shutdown', title: 'АВАРИЯ: ...',
-  text: ['Что случилось'], hours: 4, reserve: 2, points: 10,
+  id: 'emergency-2', type: 'shutdown', title: 'EMERGENCY: ...',
+  text: ['What happened'], hours: 4, reserve: 2, points: 10,
   formula: 'E = P · t',
   consumers: [
-    { name: 'Жизнеобеспечение', power: 0.6, role: 'critical', offText: 'Почему нельзя' },
-    { name: 'Радар', power: 0.25, role: 'needed', offSafety: -10, offText: 'Что будет' },
-    { name: 'Освещение', power: 0.15, role: 'optional' }
+    { name: 'Life support', power: 0.6, role: 'critical', offText: 'Why not' },
+    { name: 'Radar', power: 0.25, role: 'needed', offSafety: -10, offText: 'What will happen' },
+    { name: 'Lighting', power: 0.15, role: 'optional' }
   ]
 }
 ```
 
-Роли: `critical` (выключить = провал), `needed` (выключить = нет очков и штраф безопасности), `useful` (только штраф безопасности), `optional` (можно выключать).
+Roles: `critical` (switching off = failure), `needed` (switching off = no points and a safety penalty), `useful` (safety penalty only), `optional` (fine to switch off).
 
-Любую другую аварию (например, поломку связи) делайте шагом `choice`: текст аварии в `text`, решения в `options`, у каждого решения свои `effects`.
+Make any other emergency (for example a comms failure) a `choice` step: the emergency text in `text`, the decisions in `options`, each decision with its own `effects`.
 
-## Как добавить миссию
+## How to add a mission
 
-В `data/missions.js` уже есть две заготовки с `locked: true` («Стыковка со станцией», «Посадка на Луну»). Заполните им `crew`, `o2PerPersonHour`, `resources`, `success`, `targets` и `steps` (как у первой миссии) и удалите `locked`. Миссия сразу появится в меню.
+`data/missions.js` already has two stubs with `locked: true` ("Station Docking", "Moon Landing"). Fill in `crew`, `o2PerPersonHour`, `resources`, `success`, `targets` and `steps` (as in the first mission) and remove `locked`. The mission will appear in the menu right away. For a `check` step, give every system that can break a `fault`, and the mission gets a different fault each run with no engine changes.
 
-`targets` это сколько ресурсов остаётся при идеальной игре. Пройдите миссию без ошибок: в конце игра выводит остаток в консоль браузера (F12), эти числа и впишите.
+`targets` is how many resources are left after a perfect run. Play the mission without mistakes: at the end the game prints the remainder to the browser console (F12), put those numbers in.
 
-## Как считается оценка
+## How the score works
 
-| Часть | Баллы | Как считается |
+| Part | Points | How it is calculated |
 |---|---|---|
-| Задачи | 40 | доля набранных очков за задачи; с подсказкой задача стоит половину |
-| Безопасность | 30 | начинается со 100%, рискованные решения снимают проценты |
-| Ресурсы | 30 | по 10 за топливо, кислород и энергию: остаток делится на `targets` |
+| Tasks | 40 | share of task points earned; a task with a hint is worth half |
+| Safety | 30 | starts at 100%, risky decisions take percentages off |
+| Resources | 30 | 10 each for fuel, oxygen and energy: the remainder divided by `targets` |
 
-Каждая часть округляется, итог равен сумме частей. Если миссия не выполнена (связь не восстановлена, ресурс закончился, миссия прервана), за ресурсы баллов нет. Высший ранг «Командир экстра-класса» даётся только при безопасности 90% и выше.
+Each part is rounded, and the total is the sum of the parts. If the mission is not accomplished (contact not restored, a resource ran out, mission aborted), resources earn no points. The top rank, "Elite Commander", requires safety of 90% or higher.
 
-## Для команды: физика и упрощения
+## For the team: physics and simplifications
 
-Все формулы настоящие, числа в задачах посчитаны по ним (`js/physics.js`). Что упрощено и почему:
+All formulas are real, and the numbers in the tasks are calculated from them (`js/physics.js`). What is simplified and why:
 
-1. **Орбиты круговые и в одной плоскости.** Корабль и спутник летят по кругу в одной плоскости. В жизни орбиты немного вытянуты и наклонены, а смена наклона стоит много топлива.
-2. **Гомановский переход.** Перелёт с орбиты 300 км на 800 км по эллипсу, который касается обеих орбит. Время перелёта это половина периода эллипса по третьему закону Кеплера: t = π · √(a³ / GM), a = (r₁ + r₂) / 2. Получается ≈ 47,8 мин, допуск ±2%. Неверный способ a = R + (h₂ − h₁) случайно даёт 47,2 мин и попадает в допуск: такое совпадение отсечь нельзя, не наказывая округления.
-3. **Δv дано готовым.** Изменение скорости (274 м/с = 138 + 136) движок считает по формуле vis-viva, которой нет в школьной программе, поэтому ученику Δv дано в условии.
-4. **Топливо по формуле Циолковского**: m = m₀ · (1 − e^(−Δv/u)), u = 3000 м/с (типичный двигатель на долгохранимом топливе). Ответ ≈ 1047 кг, допуск ±3%. Приближение m ≈ m₀ · Δv / u даёт 1096 кг (на 4,6% больше): оно засчитывается отдельно как второй верный способ (`alsoAccept`), тоже с допуском ±3%. Масса корабля в задаче берётся полная, 12 т; то, что корабль легчает между двумя включениями, учтено формулой.
-5. **Фазирование не считается.** Ожидание момента, когда спутник окажется в нужной точке, показано сценой «прошло 10 часов». Если окно упущено (неверная орбита или неверное время перелёта), следующее откроется через синодический период: 1/S = 1/T₁ − 1/T₂, где T₁ ≈ 90,4 мин (300 км) и T₂ ≈ 100,7 мин (800 км). Получается S ≈ 14,7 ч. Это настоящая физика: корабль обгоняет спутник медленно, поэтому ждать долго. Каждое упущенное окно стоит экипажу ≈ 1,5 кг кислорода.
-6. **Кислород**: 0,84 кг на человека в сутки (обычная норма для расчётов пилотируемых полётов), то есть 0,035 кг в час. На борту 10 кг, на дыхание за 2 суток нужно 5,04 кг. Выход в открытый космос стоит 1,2 кг (скафандр и потери в шлюзе): это игровая оценка, не точная цифра. Утечка клапана 0,25 кг/ч.
-7. **Энергия**: E = P · t. Мощности систем (от 0,15 до 0,6 кВт) и ёмкость батареи 14 кВт·ч придуманы для игры, но порядок величин разумный для небольшого корабля. Пока панель исправна, считаем, что она покрывает текущее потребление, поэтому энергия тратится только в отдельных событиях. После аварии панель починена лишь частично, поэтому сближение и ремонт спутника идут от батареи. В аварии игра показывает только суммарную мощность P: энергию E = P · t игрок считает сам.
-8. **Неверные орбиты** (через круговую орбиту 1500 км, через 200 км) посчитаны честно как два гомановских перехода подряд: 952 м/с и 391 м/с вместо 274 м/с. ЦУП их отменяет, поэтому игрок теряет время (упущенное окно), а не топливо.
-9. **Возвращение** это обратный гомановский переход с тем же Δv; топлива нужно чуть меньше (≈ 951 кг), потому что корабль уже легче. Сход с орбиты и посадка отдельно не считаются.
-10. **Мелкие манёвры** (сближение 40 кг, облёт спутника 20 кг) это игровые оценки.
+1. **Orbits are circular and in the same plane.** The ship and satellite fly in circles in one plane. In reality orbits are slightly elongated and inclined, and changing inclination costs a lot of fuel.
+2. **Hohmann transfer.** The flight from a 300 km to an 800 km orbit is along an ellipse touching both orbits. The transfer time is half the period of the ellipse by Kepler's third law: t = π · √(a³ / GM), a = (r₁ + r₂) / 2. This gives ≈ 47.8 min, tolerance ±2%. The wrong method a = R + (h₂ − h₁) happens to give 47.2 min and falls within tolerance: this coincidence can't be ruled out without penalizing rounding.
+3. **Δv is given.** The engine calculates the speed change (274 m/s = 138 + 136) with the vis-viva equation, which isn't in the school curriculum, so the student is given Δv in the problem.
+4. **Fuel by the Tsiolkovsky rocket equation**: m = m₀ · (1 − e^(−Δv/u)), u = 3,000 m/s (a typical storable-propellant engine). The answer is ≈ 1,047 kg, tolerance ±3%. The approximation m ≈ m₀ · Δv / u gives 1,096 kg (4.6% more): it is accepted separately as a second valid method (`alsoAccept`), also with ±3%. The mass in the problem is the full 12 t; the formula accounts for the ship getting lighter between burns.
+5. **Phasing isn't calculated.** Waiting for the satellite to reach the right point is shown as a "10 hours passed" scene. If the window is missed (wrong orbit or wrong transfer time), the next one opens after the synodic period: 1/S = 1/T₁ − 1/T₂, where T₁ ≈ 90.4 min (300 km) and T₂ ≈ 100.7 min (800 km). This gives S ≈ 14.7 h. This is real physics: the ship overtakes the satellite slowly, so the wait is long. Each missed window costs the crew ≈ 1.5 kg of oxygen.
+6. **Oxygen**: 0.84 kg per person per day (the usual figure for crewed flight planning), or 0.035 kg per hour. There are 10 kg on board, and 2 days of breathing takes 5.04 kg. A spacewalk costs 1.2 kg (suit and airlock losses): this is a game estimate, not an exact figure. The suit valve leak is 0.25 kg/h.
+7. **Energy**: E = P · t. The system powers (0.15 to 0.6 kW) and the 14 kWh battery capacity are made up for the game, but the orders of magnitude are reasonable for a small ship. While the panel works, we assume it covers current consumption, so energy is only spent in specific events. After the emergency the panel is only partly repaired, so the approach and the satellite repair run on the battery. In the emergency the game shows only the total power P: the player works out E = P · t.
+8. **Wrong orbits** (via a 1,500 km circular orbit, via 200 km) are calculated honestly as two Hohmann transfers in a row: 952 m/s and 391 m/s instead of 274 m/s. Mission Control cancels them, so the player loses time (a missed window), not fuel.
+9. **The return** is a reverse Hohmann transfer with the same Δv; it takes a little less fuel (≈ 951 kg) because the ship is lighter. Deorbit and landing aren't calculated separately.
+10. **Small maneuvers** (approach 40 kg, satellite flyaround 20 kg) are game estimates. So are the pre-launch fault figures (the constants `ENGINE_LOSS`, `FUEL_LEAK`, `O2_LEAK`, `BATTERY_LOSS`, `COMMS_FUEL`, `COMMS_ENERGY`).
 
-Если команда меняет высоты орбит, массу корабля, скорость истечения, запас кислорода или расписание, меняйте константы в начале `data/missions.js` (`H1`, `H2`, `SHIP_MASS`, `U`, `O2_ON_BOARD`, `LAUNCH_WAIT` и другие): ответы, тексты решений и длительность возвращения (`returnH`, чтобы миссия укладывалась в 2 суток) пересчитаются сами.
+If the team changes the orbit altitudes, ship mass, exhaust velocity, oxygen supply or schedule, change the constants at the top of `data/missions.js` (`H1`, `H2`, `SHIP_MASS`, `U`, `O2_ON_BOARD`, `LAUNCH_WAIT` and others): the answers, solution texts and return duration (`returnH`, so the mission fits in 2 days) will recalculate themselves.
 
-Прямо в тексте (без формул) написаны: высоты 300 и 800 км в сюжете и в вариантах выбора орбиты, масса 12 т и 2600 кг топлива, мощности систем в аварии, резерв 3 кВт·ч, 1,5 кВт·ч в варианте «команды на полной мощности», 80 кг для манипулятора, 0,5 кВт·ч за задержку старта, расстояния 5 км и 50 м и ширина спутника 6 м. Их при смене констант нужно поправить руками.
+Written directly in the text (not from formulas): the altitudes 300 and 800 km in the story and in the orbit choice options, the 12 t mass and 2,600 kg of fuel, the system powers in the emergency, the 3 kWh reserve, the 1.5 kWh in the "full-power commands" option, the 80 kg for the robotic arm, the 0.5 kWh for a liftoff delay, the 5 km and 50 m distances and the 6 m satellite width. If the constants change, these need to be corrected by hand.
 
-## Что осталось команде
+## What's left for the team
 
-**Дизайн**
-- Иллюстрации: корабль, спутник, сцены старта и выхода в космос (сейчас только схема орбит и иконка).
-- Анимация перелёта по эллипсу на схеме.
-- Звук (старт, тревога, успех), кнопка выключения звука.
-- Логотип и название корабля, если хотите своё.
+**Design**
+- Illustrations: ship, satellite, liftoff and spacewalk scenes (for now only the orbit diagram and the icon).
+- Animation of the flight along the ellipse on the diagram.
+- Sound (liftoff, alarm, success), a mute button.
+- A logo and ship name, if you want your own.
 
-**Контент**
-- Миссии «Стыковка со станцией» и «Посадка на Луну» (заготовки уже в меню).
-- Вторая авария на выбор (например, поломка системы связи) и случайный выбор аварии.
-- Больше задач: орбитальная скорость, период спутника, задача на фазирование (на какой угол спутник должен опережать корабль перед стартом перехода).
-- Уровни сложности: на лёгком показывать подсказку сразу, на сложном меньше допуск.
+**Content**
+- The "Station Docking" and "Moon Landing" missions (stubs are already in the menu).
+- A second emergency to choose from (for example a comms failure) and random emergency selection.
+- More tasks: orbital velocity, satellite period, a phasing task (what angle the satellite should lead the ship by before the transfer).
+- Difficulty levels: on easy show the hint right away, on hard use a smaller tolerance.
 
-**Программирование**
-- Выложить игру в интернет (GitHub Pages или Netlify), чтобы играть с телефона по ссылке.
-- Сохранение лучшего результата и таблица рекордов.
-- Счётчик игроков: сколько человек прошло миссию. Он покажет, сколько людей на самом деле играют.
-- Английская версия текста.
-- Автотесты на проверку ответов и расчёт оценки.
+**Programming**
+- Put the game online (GitHub Pages or Netlify) so it can be played on a phone from a link.
+- Saving the best result and a leaderboard.
+- A player counter: how many people have finished the mission. It will show how many people actually play.
+- Automated tests for answer checking and scoring.
 
-## Что проверено в этой версии
+## What was tested in this version
 
-- Полное прохождение без ошибок: 100 из 100.
-- Прохождение с ошибками: неверный ответ, подсказка, неверная орбита, неверное время, отказ от замены клапана.
-- Все ветки аварии: правильное отключение, нарушение резерва, разрядка батареи, отключение жизнеобеспечения.
-- Варианты ответа перемешиваются, правильный ответ не всегда первый.
-- Ветка «прервать миссию» и ветка «кислород закончился».
-- Экран телефона (375 px) и ноутбука, ввод ответа с запятой, пробелами и единицами (`1 047`, `5,04`, `5,04 кг`, `5.`).
+- A full run without mistakes for each of the six pre-launch faults: 100 out of 100.
+- A run launching with each of the six faults unfixed: the consequence fires and the mission can still be finished.
+- Faults do not repeat until all six have come up, including after a page reload.
+- Number input in English and European formats (`1,047`, `1 047`, `5.04`, `5,04`, `5.04 kg`, `5.`).
+- Desktop and phone (375 px) screens.
+# Demo-Starburst
