@@ -1,13 +1,13 @@
-/* Mission Simulator: тёмная космическая тема. Все цвета заданы токенами ниже. */
+/* Mission Simulator: dark space theme. All colors are defined as tokens below. */
 :root {
   --bg: #070b1a;
   --surface: #0f1631;
   --surface2: #16204a;
   --border: #26315f;
-  --tp: #eef2ff;          /* основной текст */
-  --ts: #b4bde0;          /* второстепенный */
-  --tm: #8590bb;          /* приглушённый */
-  --accent: #ffb547;      /* янтарный: кнопки, акценты */
+  --tp: #eef2ff;          /* primary text */
+  --ts: #b4bde0;          /* secondary */
+  --tm: #8590bb;          /* muted */
+  --accent: #ffb547;      /* amber: buttons, accents */
   --accent-dark: #e69a22;
   --blue: #5fb3ff;
   --green: #3fd28b;
@@ -75,7 +75,7 @@ b { color: #fff; }
 .bar.big { height: 10px; }
 .bar.over i { background: var(--red); }
 
-/* ---------- карточки ---------- */
+/* ---------- cards ---------- */
 .card {
   background: linear-gradient(180deg, var(--surface), #0c1329);
   border: 1px solid var(--border); border-radius: var(--radius);
@@ -99,7 +99,7 @@ b { color: #fff; }
 .givens ul { margin: 0; padding-left: 18px; }
 .givens li { margin: 2px 0; }
 
-/* ---------- ввод ответа ---------- */
+/* ---------- answer input ---------- */
 .answer { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; }
 .answer input {
   flex: 1; min-width: 0; font: inherit; font-size: 20px; font-weight: 600;
@@ -113,7 +113,7 @@ b { color: #fff; }
 .err:empty { display: none; }
 .hint { background: #5fb3ff14; border: 1px dashed #5fb3ff66; border-radius: 12px; padding: 10px 12px; margin-top: 10px; }
 
-/* ---------- кнопки ---------- */
+/* ---------- buttons ---------- */
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .actions:empty { display: none; }
 .btn {
@@ -127,7 +127,7 @@ b { color: #fff; }
 .btn-ghost { background: transparent; color: var(--ts); border: 1px solid var(--border); }
 .btn:focus-visible, .opt:focus-visible, .sys-btn:focus-visible, .mission:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
-/* ---------- варианты ---------- */
+/* ---------- options ---------- */
 .opts { display: grid; gap: 10px; margin-top: 10px; }
 .opt {
   font: inherit; text-align: left; color: var(--tp); background: var(--surface2);
@@ -141,7 +141,7 @@ b { color: #fff; }
 .opt.chosen.right { background: #3fd28b22; }
 .opt.chosen.wrong { background: #ff6b6b22; border-color: var(--red); }
 
-/* ---------- результат ---------- */
+/* ---------- result ---------- */
 .result:empty { display: none; }
 .result { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); animation: rise .3s ease; }
 .verdict { font-weight: 800; font-size: 18px; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
@@ -159,7 +159,7 @@ b { color: #fff; }
 .chip.pos { color: #b6f5d6; background: #3fd28b1f; }
 .chip.time { color: #cfe6ff; background: #5fb3ff1f; }
 
-/* ---------- схема ---------- */
+/* ---------- diagram ---------- */
 .diagram { margin: 0 0 14px; background: #060a1c; border: 1px solid var(--border); border-radius: 14px; padding: 8px; }
 .diagram svg { display: block; width: 100%; max-width: 360px; height: auto; margin: 0 auto; }
 .diagram figcaption { font-size: 12px; color: var(--tm); text-align: center; }
@@ -180,7 +180,7 @@ b { color: #fff; }
 .lbl.acc { fill: var(--accent); }
 .lbl-earth { fill: #e8f3ff; font-size: 11px; }
 
-/* ---------- предстартовая проверка ---------- */
+/* ---------- pre-launch check ---------- */
 .counter { color: var(--ts); font-size: 14px; }
 .systems { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .sys { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
@@ -199,7 +199,7 @@ b { color: #fff; }
 .sys-body { padding: 0 16px 14px; color: var(--ts); }
 .sys-body .opts { margin-top: 6px; }
 
-/* ---------- авария: отключение систем ---------- */
+/* ---------- emergency: switching systems off ---------- */
 .energy-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 14px; }
 .energy-box > div { background: var(--surface2); border-radius: 12px; padding: 10px; min-width: 0; }
 .energy-box b { font-size: 17px; white-space: nowrap; }
@@ -223,7 +223,7 @@ b { color: #fff; }
 .live-note.good { color: var(--green); }
 .live-note.bad { color: var(--red); }
 
-/* ---------- меню ---------- */
+/* ---------- menu ---------- */
 .hero { text-align: center; padding: 28px 4px 12px; }
 .logo { width: 72px; height: 72px; margin: 0 auto 14px; border-radius: 20px; background: url("../assets/icon.svg") center/cover; box-shadow: 0 0 40px #ffb54744; }
 .hero h1 { font-size: 34px; letter-spacing: -.02em; background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -244,7 +244,7 @@ b { color: #fff; }
 .mission-sub { color: var(--ts); font-size: 15px; }
 .footnote { text-align: center; color: var(--tm); font-size: 13px; margin-top: 18px; }
 
-/* ---------- итоги ---------- */
+/* ---------- results ---------- */
 .score { text-align: left; }
 .verdict-big { text-align: center; font-size: 26px; font-weight: 800; margin-bottom: 6px; }
 .verdict-big.right { color: var(--green); }
@@ -269,7 +269,7 @@ b { color: #fff; }
 .log li { font-size: 14px; color: var(--ts); }
 .lt { color: var(--blue); font-variant-numeric: tabular-nums; margin-right: 6px; white-space: nowrap; }
 
-/* ---------- узкие экраны ---------- */
+/* ---------- narrow screens ---------- */
 @media (max-width: 420px) {
   .card { padding: 16px; }
   .step h2 { font-size: 20px; }
@@ -286,7 +286,7 @@ b { color: #fff; }
   * { animation: none !important; transition: none !important; }
 }
 
-/* фокус на заголовке шага нужен только экранному диктору, рамку не рисуем */
+/* focus on the step heading is only for screen readers, so no outline */
 .step h2:focus { outline: none; }
 .tasks li.skip { border-left-color: var(--tm); opacity: .75; }
 @media (max-width: 420px) {
